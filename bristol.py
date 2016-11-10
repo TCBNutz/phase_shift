@@ -14,12 +14,30 @@ def r(E_det,kappa,kappa_s,g,gamma,C_det):
     ((1j*E_det+0.5*gamma)*(1j*C_det+0.5*kappa+0.5*kappa_s)+g**2)
     return r
 
+def r_old(E_det,kappa,kappa_s,g,gamma,C_det):
+    """ emitter detuning E_det,
+    mode-in/out coupling kappa,
+    lossy mode coupling kappa_s,
+    emitter - cavity coupling g
+    emitter lifetime gamma,
+    cavity detuning C_det """
+    w=E_det
+    w_X=0
+    w_C=1.
+    r=1-kappa*(1j*(w_X - w)+0.5*gamma)/ \
+    ((1j*(w_X - w)+0.5*gamma)*(1j*(w_C)+0.5*kappa+0.5*kappa_s)+g**2)
+    return r
+
 class parameters:
     def __init__(self,params):
         (self.kappa,self.kappa_s,self.g,self.gamma,self.C_det)=params
 
     def phase(self,E_det):
         refl=r(E_det,self.kappa,self.kappa_s,self.g,self.gamma,self.C_det)
+        return np.arctan2(refl.imag,refl.real)
+
+    def phase_old(self,E_det):
+        refl=r_old(E_det,self.kappa,self.kappa_s,self.g,self.gamma,self.C_det)
         return np.arctan2(refl.imag,refl.real)
 
 def U(J, A, Om, w, T):
@@ -61,8 +79,10 @@ def U(J, A, Om, w, T):
     return U
 
 if __name__=='__main__':
-    p=parameters([1.5,0.28,1.e-4,0.7,1.]) #kappa,kappa_s,g,gamma,C_det
-    x=np.linspace(-5,5,100000)
+    p=parameters([4100,0.,38.,0.28,2700.]) #kappa,kappa_s,g,gamma,C_det
+    x=np.linspace(-5,5,10000)
     y=map(p.phase,x)
     plt.plot(x,y)
+    plt.ylabel("phase shift")
+    plt.xlabel(r'$\omega_{X -} - \omega$ [$\mu$eV]')
     plt.show()
