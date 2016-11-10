@@ -3,42 +3,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def r(E_det,kappa,kappa_s,g,gamma,C_det):
+def r(w_QD,w_C,w,kappa,gamma,g):
     """ emitter detuning E_det,
     mode-in/out coupling kappa,
     lossy mode coupling kappa_s,
     emitter - cavity coupling g
     emitter lifetime gamma,
     cavity detuning C_det """
-    r=1-kappa*(1j*E_det+0.5*gamma)/ \
-    ((1j*E_det+0.5*gamma)*(1j*C_det+0.5*kappa+0.5*kappa_s)+g**2)
+    r=1-kappa*(1j*(w_QD - w)+0.5*gamma)/ \
+    ((1j*(w_QD - w)+0.5*gamma)*(1j*(w_C - w)+0.5*kappa)+g**2)
     return r
 
-def r_old(E_det,kappa,kappa_s,g,gamma,C_det):
-    """ emitter detuning E_det,
-    mode-in/out coupling kappa,
-    lossy mode coupling kappa_s,
-    emitter - cavity coupling g
-    emitter lifetime gamma,
-    cavity detuning C_det """
-    w=E_det
-    w_X=0
-    w_C=1.
-    r=1-kappa*(1j*(w_X - w)+0.5*gamma)/ \
-    ((1j*(w_X - w)+0.5*gamma)*(1j*(w_C)+0.5*kappa+0.5*kappa_s)+g**2)
-    return r
+phase = lambda r: np.arctan2(r.imag,r.real)
 
 class parameters:
     def __init__(self,params):
-        (self.kappa,self.kappa_s,self.g,self.gamma,self.C_det)=params
+        (self.w_QD, self.w_C, self.kappa, self.gamma, self.g) = params
 
-    def phase(self,E_det):
-        refl=r(E_det,self.kappa,self.kappa_s,self.g,self.gamma,self.C_det)
-        return np.arctan2(refl.imag,refl.real)
+    def phase_method(self,w):
+        refl=r(self.w_QD, self.w_C, w ,self.kappa, self.gamma, self.g)
+        return phase(refl.imag,refl.real)
 
-    def phase_old(self,E_det):
-        refl=r_old(E_det,self.kappa,self.kappa_s,self.g,self.gamma,self.C_det)
-        return np.arctan2(refl.imag,refl.real)
+    def reflectivity(self,w):
+        refl=r(self.w_QD, self.w_C, w ,self.kappa, self.gamma, self.g)
+        return refl
+    
 
 def U(J, A, Om, w, T):
     """ Unitary evolution propagator for box model in |j m> |z> basis. After Ed's notes eq. 8 """
@@ -79,10 +68,13 @@ def U(J, A, Om, w, T):
     return U
 
 if __name__=='__main__':
-    p=parameters([4100,0.,38.,0.28,2700.]) #kappa,kappa_s,g,gamma,C_det
-    x=np.linspace(-5,5,10000)
-    y=map(p.phase,x)
+    p_up=parameters([-2680., 0., 4100., .28, 38]) #w_QD, w_C, kappa, gamma, g
+    p_down=parameters([-2720., 0., 4100., .28, 38.])
+    x=np.linspace(-2730,-2670,100000)
+    #g=lambda w: phase(p_up.reflectivity(w) / p_down.reflectivity(w))
+    g=lambda w: abs(p_up.reflectivity(w))
+    y=map(g,x)  
     plt.plot(x,y)
-    plt.ylabel("phase shift")
-    plt.xlabel(r'$\omega_{X -} - \omega$ [$\mu$eV]')
+    plt.ylabel(r'$\theta_\uparrow - \theta_\downarrow$')
+    plt.xlabel(r'$\omega - \omega_C$ [$\mu$eV]')
     plt.show()
