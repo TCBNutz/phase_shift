@@ -37,3 +37,11 @@ def U(J, A, Om, w, T):
     
     U = np.diag(U_diag) + np.diag(U_diag_up,k=1) + np.diag(U_diag_down,k=-1)
     return U
+
+def Iz(J):
+    """ total nuclear spin Z-operator """
+    if J==0:
+        return np.array([1.])
+    else:
+        diagonal=np.arange(J,-J-1,-1)
+        return np.diag(diagonal)

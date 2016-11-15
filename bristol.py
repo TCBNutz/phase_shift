@@ -3,13 +3,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from U_box import U
+from U_box import U, Iz
 
 ir2 = 1 / np.sqrt(2)
 H = np.array([1., 0.])
 V = np.array([0., 1.])
 H_proj=np.array([[1,0],[0,0]])
 V_proj=np.array([[0,0],[0,1]])
+R_proj=0.5*np.array([[1,-1j],[1j,1]])
+L_proj=0.5*np.array([[1,1j],[-1j,1]])
 hbar=6.582119514e-10 #ueV s
 
 def TMany(x):
@@ -22,11 +24,13 @@ def DMany(x):
 
 phase = lambda r: np.arctan2(r.imag,r.real)
 
-p_shift = lambda theta: 0.5*(np.array([[1,-1j],[1j,1]]) + np.exp(1j*theta)*np.array([[1,1j],[-1j,1]]))
+p_shift = lambda theta: 0.5*(np.exp(1j*theta[0])*R_proj + np.exp(1j*theta[1])*L_proj)
 
 adj=lambda x: np.conj(np.transpose(x))
 
 max_mix=lambda J: np.eye(2*(2*J+1))/(2*(2*J+1))
+
+IZ=lambda J: np.kron(Iz(J),np.eye(2))
 
 def r(w_QD,w_C,w,kappa,gamma,g):
     """ emitter energy w_QD,
@@ -43,11 +47,13 @@ def CP(p):
     """ makes phase shift conditional on nuclear z-projection.
     j is the size of the box model block, p is an instance of the
     parameters class. """
-    U=np.zeros((2*(2*p.J+1),2*(2*p.J+1)),dtype = np.complex128)
+    U_up=np.zeros((2*(2*p.J+1),2*(2*p.J+1)),dtype = np.complex128)
+    U_down=np.zeros((2*(2*p.J+1),2*(2*p.J+1)),dtype = np.complex128)
     for k in xrange(p.J,-p.J-1,-1):
-        U += np.kron(np.diag([0]*(p.J-k) + [1] + [0]*(p.J+k)),p_shift(p.phase_diff(k)))
-    U_up=TMany([H_proj,np.eye(2*(2*p.J+1))])
-    U_down=np.kron(V_proj,U)
+        U_up += np.kron(np.diag([0]*(p.J-k) + [1] + [0]*(p.J+k)),p_shift(p.phases(k)[:2]))
+        U_down += np.kron(np.diag([0]*(p.J-k) + [1] + [0]*(p.J+k)),p_shift(p.phases(k)[2:]))
+    U_up=TMany([H_proj,U_up])
+    U_down=np.kron(V_proj,U_down)
     return U_up+U_down
 
 def U_Box(p,t):
@@ -73,39 +79,45 @@ def R(r_en,p):
 
 class parameters:
     def __init__(self):
-        self.J=3
+        self.J=6
         self.w_C=2700.
         self.w=0.
         self.kappa=4100.
         self.gamma=0.28
         self.g=38.
-        self.A=5.
+        self.A=.2
         self.Zeeman=50.
 
-    def phase_diff(self,m):
-        r_down=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
-        r_up=r(self.Zeeman+0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
-        return phase(r_down/r_up)
+    def phases(self,m):
+        """ phase difference given nuclear spin projection m """
+        r_downL=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
+        r_downR=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, 0.)
+        r_upL=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, 0.)        
+        r_upR=r(self.Zeeman+0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
+        return map(lambda x: phase(x),[r_upR,r_upL,r_downR,r_downL])
 
-if __name__=='__main__':
+def run():
     p=parameters()
-    time_obs=1000 #us, photon detection on average every 1 us
-    times=[time_obs*random.random() for i in xrange(time_obs)] # 100 random times
+    time_obs=100 #us, photon detection on average every 1 us
+    times=[time_obs*random.random() for i in xrange(time_obs)] # random times
     times.sort()
     intervals=[j-i for i, j in zip(times[:-1], times[1:])] 
     results=[]
     state=max_mix(p.J)
+    Zn=IZ(p.J)
     for i in intervals:
+        pre=np.real(np.trace(np.dot(Zn,state))) # nuclear polarization before
         state,outcome=R(DMany([U_Box(p,i),state,adj(U_Box(p,i))]),p)
-        results.append(outcome)
+        post=np.real(np.trace(np.dot(Zn,state))) # nuclear polarization after
+        results.append([outcome,pre,post])
+    return [results,times]
 
-    """
-    # plot phase shift over QD energy
-    x=np.linspace(-3,+3,10000)
-    g=lambda w: p.phase_diff(w)
-    y=map(g,x)  
-    plt.plot(x,y)
-    plt.ylabel(r'$\theta_\uparrow - \theta_\downarrow$')
-    plt.xlabel('m')
+if __name__=='__main__':
+    Run=run()
+    
+    g=lambda w: w[1]
+    y=map(g,Run[0])  
+    plt.plot(Run[1][1:],y)
+    plt.ylabel(r'$I_z$ pre')
+    plt.xlabel('time')
     plt.show()
-    """
