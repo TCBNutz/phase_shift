@@ -24,7 +24,7 @@ def DMany(x):
 
 phase = lambda r: np.arctan2(r.imag,r.real)
 
-p_shift = lambda theta: 0.5*(np.exp(1j*theta[0])*R_proj + np.exp(1j*theta[1])*L_proj)
+p_shift = lambda rl: rl[0]*R_proj + rl[1]*L_proj
 
 adj=lambda x: np.conj(np.transpose(x))
 
@@ -47,18 +47,29 @@ def CP(p):
     """ makes phase shift conditional on nuclear z-projection.
     j is the size of the box model block, p is an instance of the
     parameters class. """
-    U_up=np.zeros((2*(2*p.J+1),2*(2*p.J+1)),dtype = np.complex128)
-    U_down=np.zeros((2*(2*p.J+1),2*(2*p.J+1)),dtype = np.complex128)
+    U_up=np.zeros((4*(2*p.J+1),4*(2*p.J+1)),dtype = np.complex128)
+    U_down=np.zeros((4*(2*p.J+1),4*(2*p.J+1)),dtype = np.complex128)
     for k in xrange(p.J,-p.J-1,-1):
-        U_up += np.kron(np.diag([0]*(p.J-k) + [1] + [0]*(p.J+k)),p_shift(p.phases(k)[:2]))
-        U_down += np.kron(np.diag([0]*(p.J-k) + [1] + [0]*(p.J+k)),p_shift(p.phases(k)[2:]))
-    U_up=TMany([H_proj,U_up])
-    U_down=np.kron(V_proj,U_down)
+        U_up += TMany([np.diag([0]*(p.J-k) + [1] + \
+                               [0]*(p.J+k)),H_proj,p_shift(p.phases(k)[:2])])
+        U_down += TMany([np.diag([0]*(p.J-k) + [1] + \
+                                 [0]*(p.J+k)),V_proj,p_shift(p.phases(k)[2:])])
     return U_up+U_down
 
 def U_Box(p,t):
     """ Box model Hamiltonian for parameters instance p and time t [us]. """
     return U(p.J,p.A,p.Zeeman,p.Zeeman/1000,t/hbar)
+
+def trace_over_elnuc(rho_enp):
+    """ traces over all but the innermost qubit """
+    photon=np.zeros((2,2),dtype=np.complex128)
+    d=len(rho_enp)/2
+    for i in xrange(d):
+        p=np.matrix(np.zeros((1,d)))
+        p[0,i]=1
+        p=np.kron(p,np.asmatrix(np.identity(2)))
+        photon += DMany([p,rho_enp,p.H])
+    return photon
 
 def R(r_en,p):
     """ performs probabilistic measurement on the photon that has interacted
@@ -79,27 +90,27 @@ def R(r_en,p):
 
 class parameters:
     def __init__(self):
-        self.J=6
+        self.J=7
         self.w_C=2700.
         self.w=0.
         self.kappa=4100.
         self.gamma=0.28
         self.g=38.
-        self.A=.2
+        self.A=.5
         self.Zeeman=50.
 
     def phases(self,m):
-        """ phase difference given nuclear spin projection m """
-        r_downL=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
-        r_downR=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, 0.)
-        r_upL=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, 0.)        
-        r_upR=r(self.Zeeman+0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
-        return map(lambda x: phase(x),[r_upR,r_upL,r_downR,r_downL])
+        """ exp(phase(r)) given nuclear spin projection m """
+        r_DL=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
+        r_DR=r(-0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, 0.)
+        r_UL=r(0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, 0.)        
+        r_UR=r(self.Zeeman+0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
+        return map(lambda x:x/abs(x),[r_UR,r_UL,r_DR,r_DL])
 
-def run():
+def run(t):
+    """ input length of run in us """
     p=parameters()
-    time_obs=100 #us, photon detection on average every 1 us
-    times=[time_obs*random.random() for i in xrange(time_obs)] # random times
+    times=[t*random.random() for i in xrange(t)] # random times
     times.sort()
     intervals=[j-i for i, j in zip(times[:-1], times[1:])] 
     results=[]
@@ -112,8 +123,9 @@ def run():
         results.append([outcome,pre,post])
     return [results,times]
 
+
 if __name__=='__main__':
-    Run=run()
+    Run=run(500)
     
     g=lambda w: w[1]
     y=map(g,Run[0])  
@@ -121,3 +133,14 @@ if __name__=='__main__':
     plt.ylabel(r'$I_z$ pre')
     plt.xlabel('time')
     plt.show()
+    
+    """
+    # plotting phase shift
+    p=parameters()
+    x=np.linspace(-20,20,50000)
+    #y1=map(lambda x: phase(p.phases(x)[0]/p.phases(x)[1]),x)
+    y2=map(lambda x: phase(p.phases(x)[2]/p.phases(x)[3]),x)
+    #plt.plot(x,y1)
+    plt.plot(x,y2)
+    plt.show()
+    """
