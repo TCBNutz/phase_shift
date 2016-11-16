@@ -32,6 +32,8 @@ max_mix=lambda J: np.eye(2*(2*J+1))/(2*(2*J+1))
 
 IZ=lambda J: np.kron(Iz(J),np.eye(2))
 
+IZ_eval = lambda p,state: np.real(np.trace(np.dot(IZ(p.J),state))) # expectation value of I_z. p is parameters instance
+
 def r(w_QD,w_C,w,kappa,gamma,g):
     """ emitter energy w_QD,
     cavity resonance w_C,
@@ -90,13 +92,13 @@ def R(r_en,p):
 
 class parameters:
     def __init__(self):
-        self.J=7
+        self.J=3
         self.w_C=2700.
         self.w=0.
         self.kappa=4100.
         self.gamma=0.28
         self.g=38.
-        self.A=.5
+        self.A=.34 # pi phase shift at m=-2
         self.Zeeman=50.
 
     def phases(self,m):
@@ -115,17 +117,17 @@ def run(t):
     intervals=[j-i for i, j in zip(times[:-1], times[1:])] 
     results=[]
     state=max_mix(p.J)
-    Zn=IZ(p.J)
     for i in intervals:
-        pre=np.real(np.trace(np.dot(Zn,state))) # nuclear polarization before
+        pre=IZ_eval(p,state) # nuclear polarization before
         state,outcome=R(DMany([U_Box(p,i),state,adj(U_Box(p,i))]),p)
-        post=np.real(np.trace(np.dot(Zn,state))) # nuclear polarization after
+        post=IZ_eval(p,state) # nuclear polarization after
         results.append([outcome,pre,post])
     return [results,times]
 
 
 if __name__=='__main__':
-    Run=run(500)
+    
+    Run=run(2000)
     
     g=lambda w: w[1]
     y=map(g,Run[0])  
@@ -137,10 +139,10 @@ if __name__=='__main__':
     """
     # plotting phase shift
     p=parameters()
-    x=np.linspace(-20,20,50000)
+    x=np.linspace(-10,10,21)
     #y1=map(lambda x: phase(p.phases(x)[0]/p.phases(x)[1]),x)
-    y2=map(lambda x: phase(p.phases(x)[2]/p.phases(x)[3]),x)
+    y2=map(lambda x: (phase(p.phases(x)[2]/p.phases(x)[3]))/np.pi,x)
     #plt.plot(x,y1)
-    plt.plot(x,y2)
+    plt.plot(x,y2,'bo')
     plt.show()
     """
