@@ -34,6 +34,10 @@ IZ=lambda J: np.kron(Iz(J),np.eye(2))
 
 IZ_eval = lambda p,state: np.real(np.trace(np.dot(IZ(p.J),state))) # expectation value of I_z. p is parameters instance
 
+IZ_var = lambda p,state: np.real(np.trace(DMany([IZ(p.J),IZ(p.J),state])) \
+                                 - np.trace(np.dot(IZ(p.J),state))**2) # variance
+IZ_stdev=lambda p,state: np.sqrt(IZ_var(p,state)) # standard deviation
+
 def r(w_QD,w_C,w,kappa,gamma,g):
     """ emitter energy w_QD,
     cavity resonance w_C,
@@ -83,16 +87,68 @@ def R(r_en,p):
     r_r_enp=DMany([CP(p),r_enp,adj(CP(p))])
     p_H=np.trace(np.dot(H_big,r_r_enp))
     if random.random() < p_H:
-        outcome='h'
+        outcome=1 #h
         r_out=DMany([np.kron(id_en,H),r_r_enp,np.kron(id_en,np.array([[1],[0]]))])/p_H
     else:
-        outcome='v'
+        outcome=0 #v
         r_out=DMany([np.kron(id_en,V),r_r_enp,np.kron(id_en,np.array([[0],[1]]))])/(1-p_H)
     return [r_out,outcome]
 
+def run(t):
+    """ input length of run in us """
+    p=parameters()
+    times=[t*random.random() for i in xrange(t)] # random times
+    times.sort()
+    intervals=[j-i for i, j in zip(times[:-1], times[1:])] 
+    results=[]
+    state=max_mix(p.J)
+    for i in intervals:
+        pre=IZ_eval(p,state) # nuclear polarization before
+        pre_stdev=IZ_stdev(p,state)
+        state,outcome=R(DMany([U_Box(p,i),state,adj(U_Box(p,i))]),p)
+        post=IZ_eval(p,state) # nuclear polarization after
+        post_stdev=IZ_stdev(p,state)
+        results.append([outcome,pre,pre_stdev,post,post_stdev])
+    return [results,times]
+
+def timebin_scatter(Run,tbin):
+    """ make scatter plot with horizontal (cross-polarized) counts on x and
+    vertical counts on y. """
+    tbin=30 # length of timebin in number of photons
+    t=len(Run[1])
+    outcomes=map(lambda x:x[0],Run[0])
+    averages=np.zeros(len(outcomes))
+    lobe_plot_coords=np.zeros((t/tbin,2))
+    for i in xrange(t/tbin-1):
+        l=outcomes[i*tbin:(i+1)*tbin]
+        average=sum(l)/len(l)
+        averages[i*tbin:(i+1)*tbin]=[average]*tbin
+        lobe_plot_coords[i][0],lobe_plot_coords[i][1]= \
+            np.bincount(l)[0],tbin-np.bincount(l)[0]
+    a=np.transpose(lobe_plot_coords[:-1])
+    return averages,a
+
+def run_plot(Run,tbin=30):
+    averages,a=timebin_scatter(Run,tbin)
+    y1=map(lambda w: w[1],Run[0]) #nuke pol
+    y2=map(lambda w: w[2],Run[0]) #stdev
+    plt.plot(Run[1][1:],y1,'r') #pol
+    plt.plot(Run[1][1:],y2,'b') #stdev
+    plt.plot(Run[1][1:],averages,'c') # outcomes
+    plt.ylabel(r'red: $<I_z>$, blue: $\sigma (I_z)$, cyan: photon polarization')
+    plt.xlabel('time')
+    #plt.scatter(a[1],a[0],s=70, alpha=0.07); plt.show()
+    plt.show()
+
+def plot_phaseshift(p,J):
+    """ plots phaseshift for down electron. p is instance of parameters. """
+    x=np.linspace(-J,J,2*J+1)
+    y=map(lambda x: (phase(p.phases(x)[2]/p.phases(x)[3]))/np.pi,x)
+    return x,y
+
 class parameters:
     def __init__(self):
-        self.J=3
+        self.J=10
         self.w_C=2700.
         self.w=0.
         self.kappa=4100.
@@ -109,40 +165,10 @@ class parameters:
         r_UR=r(self.Zeeman+0.5*m*self.A,self.w_C, self.w ,self.kappa, self.gamma, self.g)
         return map(lambda x:x/abs(x),[r_UR,r_UL,r_DR,r_DL])
 
-def run(t):
-    """ input length of run in us """
-    p=parameters()
-    times=[t*random.random() for i in xrange(t)] # random times
-    times.sort()
-    intervals=[j-i for i, j in zip(times[:-1], times[1:])] 
-    results=[]
-    state=max_mix(p.J)
-    for i in intervals:
-        pre=IZ_eval(p,state) # nuclear polarization before
-        state,outcome=R(DMany([U_Box(p,i),state,adj(U_Box(p,i))]),p)
-        post=IZ_eval(p,state) # nuclear polarization after
-        results.append([outcome,pre,post])
-    return [results,times]
-
-
 if __name__=='__main__':
-    
-    Run=run(2000)
-    
-    g=lambda w: w[1]
-    y=map(g,Run[0])  
-    plt.plot(Run[1][1:],y)
-    plt.ylabel(r'$I_z$ pre')
-    plt.xlabel('time')
+    #t=200 #time of the run in us
+    #Run=run(t)
+    #run_plot(Run)
+    x,y=plot_phaseshift(parameters(),50)
+    plt.plot(x,y,'bo')
     plt.show()
-    
-    """
-    # plotting phase shift
-    p=parameters()
-    x=np.linspace(-10,10,21)
-    #y1=map(lambda x: phase(p.phases(x)[0]/p.phases(x)[1]),x)
-    y2=map(lambda x: (phase(p.phases(x)[2]/p.phases(x)[3]))/np.pi,x)
-    #plt.plot(x,y1)
-    plt.plot(x,y2,'bo')
-    plt.show()
-    """
