@@ -7,9 +7,9 @@
 \newcommand{\bpz}{\bra{\psi_0}}
 \newcommand{\hz}{\braket{H_0}}
 \newcommand{\hsqz}{\braket{H^2_0}}
+\newcommand{\heff}{H_{\mathrm{eff}}}
 
 \section*{Estimate of Zeno time for hyperfine flip-flops}
-
 Say we start out in a state $\ket{\psi_0}=\ket{\uparrow}\otimes\ket{\phi_0}$, where $\ket{\phi_0}$ is some nuclear state. This is approximately the case after many consecutive cross-polarized detections, which tell us that the nuclear state $\ket{\phi_0}$ is most probably the nuclear state that puts the transition on resonance. 
 
 What is the timescale at which we could Zeno-inhibit the hyperfine evolution (``decay'') of this state? 
@@ -19,7 +19,7 @@ Let's start out with the standard expression for the Zeno time $\tau_Z$ \cite{pa
 \[
 \bpz e^{-i H t} \kpz = 1 - i\hz t -\frac{1}{2} \hsqz t^2
 \]
-where $ \hsqz = \bpz | H^2 | \kpz$ and similar for $\hz$.
+where $ \hsqz = \bpz  H^2 \kpz$ and similar for $\hz$.
 Then the probability to find the system in state $\kpz$ after a short time $t$ is given by
 \begin{equation}
 p_0(t) \approx 1- (\hsqz - \hz^2)t^2 \equiv 1- \frac{t^2}{\tau_z^2} 
@@ -66,7 +66,7 @@ where
 m_{(x,y)}&= 1\ \  \mathrm{for}\ x^2+y^2<r^2 \\
  &= 0\ \  \mathrm{else}
 \end{split}\] and where the indices $x,y$ take on integer values.
-We assume nuclear spin $J_k=\frac{1}{2}$ and a nuclear spate in which the flipable spins are uniformly distributed. Furthermore take $N_z=10$.
+We assume nuclear spin $J_k=\frac{1}{2}$ and a nuclear state in which the flipable spins are uniformly distributed. Furthermore take $N_z=10$.
 The plots presented in Fig. \ref{Fig: tz} show that Zeno times seem to lie in the nanosecond regime under these assumptions.
 
 \begin{figure}
@@ -83,6 +83,59 @@ The plots presented in Fig. \ref{Fig: tz} show that Zeno times seem to lie in th
     \end{minipage}
     \label{Fig: tz}
 \end{figure}
+
+
+\section*{Estimate of Zeno time for the Overhauser field with constant electron spin polarization}
+Given a Zeeman splitting of the electron spin states much larger than the hyperfine interaction energy, flip-flops of the electron spin with nuclei occur with small probability amplitude. The hyperfine interaction in this regime is to a good approximation of pure dephasing character. Approximating a hyperfine Hamiltonian by a pure dephasing Hamiltonian involves replacing the electron-nuclear flip-flop terms $S^+I_k^- + S^-I_k^+$ by electron mediated nucleus-nucleus flip-flop terms of the form $S^Z(I_k^+I_l^- + I_k^-I_l^+$.
+
+A pure dephasing Hamiltonian can describe electron spin decoherence, which has been studied in \cite{cywinski_electron_2009} and others. It also provides a microscopic model of the quantum dynamics underlying Overhauser field fluctuations. These quantum dynamics have been recognized in \cite{klauser_nuclear_2008} to possibly enable experimental observation of a Zeno effect. However measurement of the Overhauser field with sufficient accuracy and speed has been a daunting task, up until the arrival of the low-Q QD cavity phase shift thing.
+
+In the following we study the dynamics of the pure dephasing Hamiltonian presented in \cite{klauser_nuclear_2008} in order to estimate the Zeno time of the Overhauser field and make experimentally verifiable predictions about its behaviour. The effective Hamiltonian can be writen as $\heff=H_0 + V$, where
+\begin{equation}
+\begin{split}
+H_0 &= \epsilon S^z + \eta_z \sum_k I_k^z + S^z \sum_k A_k I_k^z \\
+V &= \frac{1}{2\omega} (S^z \sum_{k \neq l} A_k A_l I_k^+ I_l^- + \frac{1}{2}\sum_k A_k^2(S^z - I_k^z)),
+\end{split}
+\label{Eq: Heff}
+\end{equation}
+which is valid for $I_k = \frac{1}{2}$ and $\frac{1}{\omega}$ with $\omega=\epsilon_z - \eta_z + \braket{\sum_kA_kI_k^z}$ approximately constant.
+
+Note that this Hamiltonian commutes with $S^z$ as well as $\sum_k I_k^z$, which means that its eigenstates live in subspaces of fixed $\sum_k I_k^z$ and fixed electron spin projection. So rather than diagonalizing a matrix of dimension $2^{N+1}$ (N number of nuclear spins) we have to deal with (still bloody big) blocks of dimension 
+\[
+\sum_{i=0}^{\min\{n_{\downarrow},n_{\uparrow}\}} \binom{n_{\uparrow}}{i}\binom{n_{\downarrow}}{i},
+\]
+where $\braket{\sum_kI_k^z} = \frac{1}{2}(n_{\uparrow}-n_{\downarrow})$.
+
+The effective Hamiltonian can be written as 
+\begin{equation}\begin{split}
+&\heff =S^z \otimes \hat{A} + \mathbb{1} \otimes \hat{B} \\
+&\mathrm{where\ the\ nuclear\ operators\ are}\\
+&\hat{A}=(\epsilon_z + \frac{1}{4\omega}\sum_k A_k^2)\mathbb{1} + \sum_k A_k I_k^z + \frac{1}{2\omega}\sum_{k \neq l} A_k A_l I_k^+ I_l^- \\
+&\hat{B} = \eta_z \sum_k I_k^z - \frac{1}{4\omega} \sum_k A_k^2 I_k^z.
+\end{split} \label{Eq. AB} \end{equation}
+
+Since the laser couples the electron states $\ket{\uparrow}$, $\ket{\downarrow}$ to the trion states it is the spectrum of the nuclear operator $\hat{A}$ that determines the detuning of the transition and thereby the phase shift of a photon. The eigenstates $\ket{a}$ of $\hat{A}$ are the states which lead to a definite phase shift and are therefore suitable for an electron spin-photon entangling operation, while superpositions of different nuclear states $\ket{A}$ can lead to nuclear spin - photon entanglement.
+
+The spectrum and eigenstates of $\hat{A}$ are generally not tractable. However there are certain simple cases which can be studied analytically and which can serve to illustrate qualitative features of the model and help to understand numerical results presented later on. We present the perturbative analysis of the graded box model \cite{petrov_coupled_2009}, which assumes that all nuclear couplings take on one of two different coupling strengths:
+\begin{equation}\begin{split}
+A_k &= A_1\ \ \ \mathrm{for}\ 1 \leq k \leq N_1\\ 
+A_k &= A_2\ \ \ \mathrm{for}\ N_1+1 \leq k \leq N.
+\end{split} \label{Eq: A graded} \end{equation}
+
+The nuclear operators become
+\begin{equation}\begin{split}
+\hat{A}&=\epsilon_z \mathbb{1} + A_1 I_1^z + A_2 I_2^z + \frac{1}{2\omega}\left(A_1^2 (I_1^2 - (I_1^z)^2) + A_2^2 (I_2^2 - (I_2^z)^2 ) + A_1 A_2 (I_1^+ I_2^- + I_1^- I_2^+)\right) \\
+\hat{B}&=\eta_z(I_1^z + I_2^z) -  \frac{1}{4\omega}(A_1^2 I_1^z + A_2^2 I_2^z)
+\end{split} \label{Eq: H graded}
+\end{equation}
+where
+\[
+I^{z/+}_1 = \sum_{k=1}^{N_1} I_k^{z/+} \hspace{0.5cm} ,\hspace{0.5cm} I^{z/+}_1 = \sum_{k=N_1+1}^{N} I_k^{z/+}.
+\]
+The identity $I^+I^-=I^2 - (I^z)^2 + I^z$ has been used in going from Eq. \ref{Eq: Heff} to Eq. \ref{Eq: H graded}.\linebreak
+
+The nuclear operators are tridiagonal in the basis of eigenstates of the operators $I_1^2, I_2^2, I_1^z, I_2^z$ as elaborated in \cite{petrov_coupled_2009} and \cite{kozlov_exactly_2007}. This almost diagonal form suggests time-independent nondegenerate perturbation theory in the off-diagonal term 
+\[\frac{A_1A_2}{2\omega}(I_1^+ I_2^- + I_1^- I_2^+) .\]
 
 \bibliography{Refs_zeno}
 \end{document}
