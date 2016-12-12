@@ -71,12 +71,12 @@ The plots presented in Fig. \ref{Fig: tz} show that Zeno times seem to lie in th
 
 \begin{figure}
     \centering
-    \begin{minipage}{.5\textwidth}
+    \begin{minipage}{.45\textwidth}
         \centering
         \includegraphics[width=\linewidth]{tz_vs_R.png}
         \caption{Zeno time vs. decay constant $R$ at a radius $r=25$.}
     \end{minipage}%
-    \begin{minipage}{0.5\textwidth}
+    \begin{minipage}{0.45\textwidth}
         \centering
         \includegraphics[width=\linewidth]{tz_vs_radius.png}
         \caption{Zeno time vs. cutoff radius $r$ for decay constant $R=0.1$.}
@@ -132,10 +132,51 @@ where
 \[
 I^{z/+}_1 = \sum_{k=1}^{N_1} I_k^{z/+} \hspace{0.5cm} ,\hspace{0.5cm} I^{z/+}_1 = \sum_{k=N_1+1}^{N} I_k^{z/+}.
 \]
-The identity $I^+I^-=I^2 - (I^z)^2 + I^z$ has been used in going from Eq. \ref{Eq: Heff} to Eq. \ref{Eq: H graded}.\linebreak
+The identity $I^+I^-=I^2 - (I^z)^2 + I^z$ has been used in going from Eq. \ref{Eq: Heff} to Eq. \ref{Eq: H graded}. Note that the nuclear operators are tridiagonal in the basis of eigenstates of the operators $I_1^2, I_2^2, I_1^z, I_2^z$, which are introduced in \cite{petrov_coupled_2009} and \cite{kozlov_exactly_2007}. 
 
-The nuclear operators are tridiagonal in the basis of eigenstates of the operators $I_1^2, I_2^2, I_1^z, I_2^z$ as elaborated in \cite{petrov_coupled_2009} and \cite{kozlov_exactly_2007}. This almost diagonal form suggests time-independent nondegenerate perturbation theory in the off-diagonal term 
-\[\frac{A_1A_2}{2\omega}(I_1^+ I_2^- + I_1^- I_2^+) .\]
+\subsection*{Perturbative analysis of the Overhauser Zeno time}
+We would like to know the spectrum of $\hat{A}$, which will correspond to the possible transition energies. Since the phase shift is a function of the detuning, a nuclear spin system in an eigenstate $\ket{a}$ of $\hat{A}$ will lead to a definite phaseshift $\theta$ on a scattered photon:
+\[
+\ket{\downarrow}_e \otimes \ket{a}_n \otimes \ket{V}_p \xrightarrow{scatter} \ket{\downarrow}_e \otimes \ket{a}_n \otimes \ket{\theta(a)}_p,
+\]
+where the subscripts $e$, $n$, $p$ denote electron, nuclei, and photon, respectively.
+
+The almost diagonal form of $\hat{A}$ in the graded box model approximation (Eq. \ref{Eq: H graded}) suggests time-independent nondegenerate perturbation theory. We therefore write
+\[
+\hat{A} = A_0 + A^{(1)}\] where
+\[ A^{(1)} = \frac{A_1A_2}{2\omega}(I_1^+ I_2^- + I_1^- I_2^+).\]
+The unperturbed states are the eigenstates of $I_1^2, I_2^2, I_1^z, I_2^z$:
+\[
+ A_0 \ket{\psi}_0 = A_0 \ket{I_1,I_2,m_1,m_2} = \left( A_1m_1 + A_2 m_2 - \frac{1}{2\omega}(A_1^2 m_1^2 + A_2^2 m_2^2) \right) \ket{I_1,I_2,m_1,m_2} = E_{m1,m2}^{(0)}\ket{\psi}_0
+\]
+where we have omitted the constant transition energy $\epsilon_z$.
+
+Since each state $\ket{I_1,I_2,m_1,m_2}$ only couples to two other states $\ket{I_1,I_2,m_1+1,m_2-1}$ and $\ket{I_1,I_2,m_1-1,m_2+1}$ under $A^{(1)}$, the second-order correction to the transition energy and first-order correction to the state $\ket{a}$ are readily computed:
+\begin{equation}\begin{split}
+E_{m_1,m_2}^{(2)}&=\frac{(A_{+-}^{m_1,m_2})^2}{E_{m_1,m_2}^{(0)} - E_{m_1+1,m_2-1}^{(0)}} + \frac{(A_{-+}^{m_1,m_2})^2}{E_{m_1,m_2}^{(0)} - E_{m_1-1,m_2+1}^{(0)}} \\
+\ket{\psi_{m_1,m_2}^{(1)}}&=\frac{A_{+-}^{m_1,m_2}}{E_{m_1,m_2}^{(0)} - E_{m_1+1,m_2-1}^{(0)}} \ket{m_1 + 1, m_2 - 1} + \frac{A_{-+}^{m_1,m_2}}{E_{m_1,m_2}^{(0)} - E_{m_1-1,m_2+1}^{(0)}}\ket{m_1 - 1, m_2 + 1}
+\end{split} \label{Eq: corrections}
+\end{equation}
+with 
+\[
+A_{+- / -+}^{m_1, m_2}=\frac{1}{2\omega}A_1A_2\sqrt{I_1(I_1+1)-m_1(m_1 \pm 1)}\sqrt{I_2(I_2+1)-m_2(m_2 \mp 1)}
+\]
+
+We now calculate the Zeno time of the states $\ket{a^{(1)}}=N(\ket{\psi}_0 + \ket{\psi^{(1)}})$:
+\[ \frac{1}{\tau_z^{(1)}} = \braket{a^{(1)} | \hat{B}^2 | a^{(1)}} - (\braket{a^{(1)} | \hat{B} | a^{(1)}})^2. \]
+This timescale has the following interpretation:
+Assume that the nuclear system can be initialized in a phase eigenstates $\ket{a}$. This could approximately be achieved by a large number of consecutive cross-polarized counts, making it overwhelmingly likely that the nuclear bath is in the state $\ket{a_{res}}$ that puts the transition in resonance with the laser. The states $\ket{a}$, however, are not energy eigenstates of the full nuclear Hamiltonian $\hat{A} + \hat{B}$. The state $\ket{a}$ evolves under the propagator $\exp^{-i \hat{B} t}$. This evolution is initially described by
+\[
+|\braket{a | \exp^{-i \hat{B} t} | a}|^2 =1- \frac{t^2}{\tau_Z^2} 
+\]
+The first-order approximation $\tau_Z^{(1)}$ of this timescale is shown in Fig. \ref{fig: tz} as a plot against Zeeman splitting $\omega$. For $\omega=10\mu \mathrm{eV}$ ($\omega=100 \mu \mathrm{eV}$) the Zeno time approximates to $\tau_Z=8 \mathrm{ms}$ ($\tau_Z=415 \mathrm{ms}$).
+
+\begin{figure}
+\includegraphics[width=0.6\linewidth]{zeno_redistribution.png}
+\label{fig: tz}
+\end{figure}
+
+One might therefore hope to observe this suppression of Overhauser field drift by the external magnetic field as increase of average cross-count plateau duration with the Zeeman splitting.
 
 \bibliography{Refs_zeno}
 \end{document}
